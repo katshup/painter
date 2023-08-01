@@ -45,3 +45,4 @@ csv = { version = "1.2" }
 
 # Db
 neo4rs = { version="0.6", optional = true, required-features = ["neo4j"]}
+cargo_toml = "0.15.3"

@@ -147,6 +147,16 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "89b2fd2a0dcf38d7971e2194b6b6eebab45ae01067456a7fd93d5547a61b70be"
 
 [[package]]
+name = "cargo_toml"
+version = "0.15.3"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "599aa35200ffff8f04c1925aa1acc92fa2e08874379ef42e210a80e527e60838"
+dependencies = [
+ "serde",
+ "toml",
+]
+
+[[package]]
 name = "cc"
 version = "1.0.79"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -881,6 +891,7 @@ dependencies = [
 name = "painter"
 version = "0.1.0"
 dependencies = [
+ "cargo_toml",
  "clap",
  "crates-index",
  "csv",
@@ -1155,6 +1166,9 @@ name = "serde"
 version = "1.0.175"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "5d25439cd7397d044e2748a6fe2432b5e85db703d6d097bd014b3c0ad1ebff0b"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_derive"

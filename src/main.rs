@@ -11,6 +11,7 @@ use std::{
     sync::Arc,
 };
 use walkdir::WalkDir;
+use cargo_toml::Manifest;
 
 pub mod analysis;
 pub mod db;
@@ -117,6 +118,18 @@ enum Command {
         #[arg(short = 'p')]
         password: String,
     },
+
+    CreateFreshDbFromProject {
+        #[arg(short = 'c')]
+        path: String,
+
+        #[arg(short = 'd')]
+        host: String,
+        #[arg(short = 'u')]
+        username: String,
+        #[arg(short = 'p')]
+        password: String,
+    }
 }
 
 /// Container object for storing the information of a given crate.
@@ -330,6 +343,16 @@ async fn main() -> Result<(), Error> {
                 });
             println!("invalid versions: {:?}", invalid_versions.lock().unwrap());
         }
+        Command::CreateFreshDbFromProject {path, host, username, password} => { 
+            let cargo_manifest = match Manifest::from_path(Path::new(&path)) {
+                Ok(x)=>x,
+                Err(_) => panic!("Not a cargo toml file."), 
+            };
+            let db = Arc::new(Db::connect(host, username, password).await?);
+
+            index::create_fresh_for_project(db, cargo_manifest).await?;
+        }
+            
     }
 
     Ok(())

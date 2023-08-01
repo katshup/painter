@@ -1,6 +1,7 @@
 use crate::db::Db;
-use crates_index::Crate;
+use crates_index::{Crate, Version};
 use std::sync::Arc;
+use cargo_toml::Manifest;
 
 #[derive(thiserror::Error, Debug)]
 pub enum Error {
@@ -51,6 +52,63 @@ pub async fn create_fresh_db(conn: Arc<Db>) -> Result<(), Error> {
 
         futures::future::join_all(tasks).await;
     }
+
+    Ok(())
+}
+
+pub async fn create_fresh_for_project(conn: Arc<Db>, manifest: Manifest) -> Result<(), Error> {
+    
+
+    let do_crate = |name: String, version: String, db: Arc<Db>| async move {
+        println!("{} :: {}", name, version);
+        let index = crates_index::Index::new_cargo_default().unwrap();
+        match index.crate_(&name) {
+            Some(c) => {
+
+                let specific_version = match version.as_str() {
+                    "*" => {
+                        c.highest_normal_version().unwrap()
+                    },
+                    _ => {
+                        let mut sv: Option<&Version> = None;
+                        for v in c.versions() {
+                            println!("{}", v.version());
+                            if v.version().starts_with(version.as_str()) {
+                                sv = Some(v);
+                            }
+                        }
+                        sv.unwrap()
+                    }
+                };
+
+                let depends: Vec<_> = specific_version
+                        .dependencies()
+                        .iter()
+                        .map(|d| {
+                            (
+                                d.name(),
+                                d.requirement(),
+                                d.features().join(", "),
+                                format!("{:?}", d.kind()),
+                                format!("{}", d.is_optional()),
+                            )
+                        })
+                        .collect();
+                
+                db.insert_crate_version(specific_version.name(), specific_version.version(), depends.iter()).await.unwrap();
+            },
+            None => {panic!("oh no");}
+        }
+    };
+
+    let deps = manifest.dependencies;
+    let mut tasks: Vec<_> = Vec::new();
+    for dep in deps.iter() {
+        tasks.push(do_crate(dep.0.clone(), String::from(dep.1.req()), conn.clone()));
+    }
+
+    futures::future::join_all(tasks).await;
+
 
     Ok(())
 }

@@ -10,7 +10,6 @@ services:
       - ./docker/db/conf:/conf
       - ./docker/db/data:/data
       - ./docker/db/logs:/logs
-      - ./docker/db/plugins:/plugins
     environment:
       # Raise memory limits
       - NEO4J_AUTH=neo4j/changeme123
